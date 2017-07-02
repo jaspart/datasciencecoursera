@@ -1,0 +1,125 @@
+---
+title: "Practical Machine Learning Project - Coursera"
+author: "Arnaud JASPART"
+date: "July 2, 2017"
+output: html_document
+runtime: shiny
+---
+# Practical Machine Learning Project - Coursera
+
+## Acknowlegements
+I would like to thank the Human Activity Recognition (see : http://groupware.les.inf.puc-rio.br/har) for providing the data for this project. 
+
+## Choices justifications
+The random forest algorithm has been choosen for this analysis for the following reasons:
+-   Detection of variable importance
+-   Embedded cross validation
+-   Need of predictions
+
+## Data analysis and cleaning
+First, we load the data:
+```{r results='asis', echo=FALSE}
+training <- read.csv("pml-training.csv")
+testing <- read.csv("pml-testing.csv")
+```
+Then, we remove the first columns containing data unrelated to the outcome of the experience.
+Such as the name of the cobaye, date of the experience, and window :
+```{r results='asis', echo=FALSE}
+training <- training[,-c(1,2,3,4,5,6,7)]
+testing <- testing[,-c(1,2,3,4,5,6,7)]
+```
+
+After, we remove the columns that contain NA values.
+```{r results='asis', echo=FALSE}
+training <-training[,colSums(is.na(testing))==0]
+testing <-testing[,colSums(is.na(testing))==0]
+```
+
+## Building model
+To apply the random forest algorithm in order to get our model, we run:
+```{r results='asis', echo=FALSE}
+library(randomForest)
+modelFit <- randomForest(classe ~., data = training)
+```
+
+## Model prediction
+We can now predict the testing values by using the model:
+```{r results='asis', echo=FALSE}
+ prediction <- predict(modelFit, testing)
+ prediction
+ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+ B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+Levels: A B C D E
+```
+
+## Cross validation
+### Embedded cross validation
+As you can read in [Breiman's official documentation](https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#ooberr)
+> "In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally..."
+
+So, the model is carrying the information (confusion matrix and error rate) :
+```{r results='asis', echo=FALSE}
+> modelFit
+
+Call:
+ randomForest(formula = classe ~ ., data = training) 
+               Type of random forest: classification
+                     Number of trees: 500
+No. of variables tried at each split: 7
+
+        OOB estimate of  error rate: 0.3%
+Confusion matrix:
+     A    B    C    D    E  class.error
+A 5579    1    0    0    0 0.0001792115
+B   12 3783    2    0    0 0.0036871214
+C    0   12 3410    0    0 0.0035067212
+D    0    0   23 3191    2 0.0077736318
+E    0    0    1    5 3601 0.0016634322
+```
+
+The error rate is in the order of 0.3%.
+
+### Calculated cross validation
+We can try to calculate it "manually".
+Notice : the testing dataset has no class value to help us verify the accuracy.
+
+In order to check the accuracy we can divide the training dataset into 2 dataset:
+- CVtraining : the training dataset for the crossvalidation operation
+- CVtesting : the testing dataset that will help calculate the accuracy
+
+Use CVtraining to get a model and use CVtesting to validate our model:
+```{r results='asis', echo=FALSE}
+library(caret)
+inTrain <- createDataPartition(y=training$classe, p=0.75, list=FALSE)
+CVtraining<- training[inTrain,]
+CVtesting<- training[-inTrain,]
+modelFit <- randomForest(classe ~., data = CVtraining)
+prediction <- predict(modelFit, CVtesting)
+```
+
+The confusion matrix can be obtained as follow:
+```{r results='asis', echo=FALSE}
+confusionMatrix <- table(prediction, CVtesting$classe)
+confusionMatrix
+
+       A    B    C    D    E
+  A 1394    5    0    0    0
+  B    1  942    5    0    0
+  C    0    2  850    4    0
+  D    0    0    0  799    2
+  E    0    0    0    1  899
+
+```
+
+The accuracy value can be obtained as follow:
+```{r results='asis', echo=FALSE}
+accuracy <- sum(diag(confusionMatrix))/sum(confusionMatrix)
+accuracy
+[1] 0.004078303
+```
+
+The calculated error rate is in the order of 0.4% (~0.408 %) :
+```{r results='asis', echo=FALSE}
+(1-accuracy)*100
+[1] 0.4078303
+```
