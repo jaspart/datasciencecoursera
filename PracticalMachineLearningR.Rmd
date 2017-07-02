@@ -16,6 +16,8 @@ The random forest algorithm has been choosen for this analysis for the following
 -   Embedded cross validation
 -   Need of predictions
 
+To see more about how Random Forest works, please see : https://en.wikipedia.org/wiki/Random_forest.
+
 ## Data analysis and cleaning
 First, we load the data:
 ```{r results='asis', echo=FALSE}
