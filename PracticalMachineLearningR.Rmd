@@ -115,13 +115,7 @@ confusionMatrix
 
 The accuracy value can be obtained as follow:
 ```{r results='asis', echo=FALSE}
-accuracy <- sum(diag(confusionMatrix))/sum(confusionMatrix)
-accuracy
+errorRate <- sum(diag(confusionMatrix))/sum(confusionMatrix)
+errorRate
 [1] 0.004078303
-```
-
-The calculated error rate is in the order of 0.4% (~0.408 %) :
-```{r results='asis', echo=FALSE}
-(1-accuracy)*100
-[1] 0.4078303
 ```
